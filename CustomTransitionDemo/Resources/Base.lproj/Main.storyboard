@@ -138,7 +138,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="image" width="1040.3333740234375" height="958.33331298828125"/>
+        <image name="image" width="520.33331298828125" height="479.33334350585938"/>
         <image name="xmark" catalog="system" width="64" height="56"/>
     </resources>
 </document>
