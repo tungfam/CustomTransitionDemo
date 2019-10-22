@@ -25,14 +25,30 @@ final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
     private let type: PresentationType
     private let firstViewController: FirstViewController
     private let secondViewController: SecondViewController
+    private let selectedCellImageViewSnapshot: UIView
+    private let cellImageViewRect: CGRect
+    private let cellLabelRect: CGRect
+    private let controllerImageViewRect: CGRect
+    private let controllerLabelRect: CGRect
+    private let closeButtonRect: CGRect
 
-    private let cellImageBackupCopy: UIView
-
-    init(type: PresentationType, firstViewController: FirstViewController, secondViewController: SecondViewController, selectedCellImageViewSnapshot: UIView) {
+    init?(type: PresentationType, firstViewController: FirstViewController, secondViewController: SecondViewController, selectedCellImageViewSnapshot: UIView) {
         self.type = type
         self.firstViewController = firstViewController
         self.secondViewController = secondViewController
-        self.cellImageBackupCopy = selectedCellImageViewSnapshot
+        self.selectedCellImageViewSnapshot = selectedCellImageViewSnapshot
+
+        guard let window = firstViewController.view.window ?? secondViewController.view.window,
+            let selectedCell = firstViewController.selectedCell
+            else { return nil }
+
+        self.cellImageViewRect = selectedCell.locationImageView.convert(selectedCell.locationImageView.bounds, to: window)
+        self.cellLabelRect = selectedCell.locationLabel.convert(selectedCell.locationLabel.bounds, to: window)
+
+        self.controllerImageViewRect = secondViewController.locationImageView.convert(secondViewController.locationImageView.bounds, to: window)
+        self.controllerLabelRect = secondViewController.locationLabel.convert(secondViewController.locationLabel.bounds, to: window)
+
+        self.closeButtonRect = secondViewController.closeButton.convert(secondViewController.closeButton.bounds, to: window)
     }
 
     func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
@@ -42,7 +58,8 @@ final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
     func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
         let containerView = transitionContext.containerView
 
-        guard let toView = secondViewController.view
+        guard let toView = secondViewController.view,
+            let selectedCell = firstViewController.selectedCell
         else {
             transitionContext.completeTransition(true)
             return
@@ -51,19 +68,9 @@ final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
         containerView.addSubview(toView)
         toView.alpha = 0
 
-        guard let selectedCell = firstViewController.selectedCell else { return }
-
-        guard let window = firstViewController.view.window ?? secondViewController.view.window else { assertionFailure(); return }
-
-        // Imporatant to take rects before snapshoting to avoid issues that frames got changed
-        let cellImageViewRect = selectedCell.locationImageView.convert(selectedCell.locationImageView.bounds, to: window)
-
-        let cellLabelRect = selectedCell.locationLabel.convert(selectedCell.locationLabel.bounds, to: window)
-
         #warning("seems transitionContext.completeTransition(true) is not working just to fall through if something is nil")
 
-        guard let cellImageViewSnapshot = selectedCell.locationImageView.snapshotView(afterScreenUpdates: true),
-            let cellLabelSnapshot = selectedCell.locationLabel.snapshotView(afterScreenUpdates: true),
+        guard let cellLabelSnapshot = selectedCell.locationLabel.snapshotView(afterScreenUpdates: true),
             let controllerImageViewSnapshot = secondViewController.locationImageView.snapshotView(afterScreenUpdates: true),
             let closeButtonSnapshot = secondViewController.closeButton.snapshotView(afterScreenUpdates: true)
         else {
@@ -71,17 +78,9 @@ final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
                 return
         }
 
-//        if type.isPresenting {
-//            cellImageBackupCopy = cellImageViewSnapshot
-//        }
-
-        let finalCellImageViewSnapshot = cellImageBackupCopy
-
-        let controllerImageViewRect = secondViewController.locationImageView.convert(secondViewController.locationImageView.bounds, to: window)
-        let controllerLabelRect = secondViewController.locationLabel.convert(secondViewController.locationLabel.bounds, to: window)
         controllerImageViewSnapshot.frame = type.isPresenting ? cellImageViewRect : controllerImageViewRect
 
-        finalCellImageViewSnapshot.frame = type.isPresenting ? cellImageViewRect : controllerImageViewRect
+        selectedCellImageViewSnapshot.frame = type.isPresenting ? cellImageViewRect : controllerImageViewRect
 
         cellLabelSnapshot.frame = type.isPresenting ? cellLabelRect : controllerLabelRect
 
@@ -101,32 +100,22 @@ final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
             backgroundView.addSubview(whiteView)
         }
 
-        let closeButtonRect = secondViewController.closeButton.convert(secondViewController.closeButton.bounds, to: window)
         closeButtonSnapshot.frame = closeButtonRect
         closeButtonSnapshot.alpha = type.isPresenting ? 0 : 1
 
-        [backgroundView, finalCellImageViewSnapshot, controllerImageViewSnapshot, cellLabelSnapshot, closeButtonSnapshot].forEach { containerView.addSubview($0) }
+        [backgroundView, selectedCellImageViewSnapshot, controllerImageViewSnapshot, cellLabelSnapshot, closeButtonSnapshot].forEach { containerView.addSubview($0) }
 
         controllerImageViewSnapshot.alpha = type.isPresenting ? 0 : 1
-        finalCellImageViewSnapshot.alpha = type.isPresenting ? 1 : 0
-
+        selectedCellImageViewSnapshot.alpha = type.isPresenting ? 1 : 0
         controllerImageViewSnapshot.alpha = type.isPresenting ? 0 : 1
 
         UIView.animateKeyframes(withDuration: Self.duration, delay: 0, options: .calculationModeCubic, animations: {
             UIView.addKeyframe(withRelativeStartTime: 0, relativeDuration: 0.6) {
-                if self.type.isPresenting {
-                    finalCellImageViewSnapshot.alpha = 0
-                } else {
-                    finalCellImageViewSnapshot.alpha = 1
-                }
+                self.selectedCellImageViewSnapshot.alpha = self.type.isPresenting ? 0 : 1
             }
 
             UIView.addKeyframe(withRelativeStartTime: 0, relativeDuration: 0.6) {
-                if self.type.isPresenting {
-                    controllerImageViewSnapshot.alpha = 1
-                } else {
-                    controllerImageViewSnapshot.alpha = 0
-                }
+                controllerImageViewSnapshot.alpha = self.type.isPresenting ? 1 : 0
             }
 
             UIView.addKeyframe(withRelativeStartTime: self.type.isPresenting ? 0.7 : 0, relativeDuration: 0.3) {
@@ -134,13 +123,13 @@ final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
             }
 
             UIView.addKeyframe(withRelativeStartTime: 0, relativeDuration: 1) {
-                finalCellImageViewSnapshot.frame = self.type.isPresenting ? controllerImageViewRect : cellImageViewRect
-                controllerImageViewSnapshot.frame = self.type.isPresenting ? controllerImageViewRect : cellImageViewRect
-                cellLabelSnapshot.frame = self.type.isPresenting ? controllerLabelRect : cellLabelRect
+                self.selectedCellImageViewSnapshot.frame = self.type.isPresenting ? self.controllerImageViewRect : self.cellImageViewRect
+                controllerImageViewSnapshot.frame = self.type.isPresenting ? self.controllerImageViewRect : self.cellImageViewRect
+                cellLabelSnapshot.frame = self.type.isPresenting ? self.controllerLabelRect : self.cellLabelRect
                 whiteView.alpha = self.type.isPresenting ? 1 : 0
             }
         }) { _ in
-            finalCellImageViewSnapshot.removeFromSuperview()
+            self.selectedCellImageViewSnapshot.removeFromSuperview()
             controllerImageViewSnapshot.removeFromSuperview()
             cellLabelSnapshot.removeFromSuperview()
             closeButtonSnapshot.removeFromSuperview()
