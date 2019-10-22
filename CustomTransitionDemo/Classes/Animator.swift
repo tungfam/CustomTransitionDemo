@@ -26,14 +26,13 @@ final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
     private let firstViewController: FirstViewController
     private let secondViewController: SecondViewController
 
-    private var cellImageLocation: CGRect?
-    private var cellLabelLocation: CGRect?
-    private var cellImageBackupCopy: UIView?
+    private let cellImageBackupCopy: UIView
 
-    init(type: PresentationType, firstViewController: FirstViewController, secondViewController: SecondViewController) {
+    init(type: PresentationType, firstViewController: FirstViewController, secondViewController: SecondViewController, selectedCellImageViewSnapshot: UIView) {
         self.type = type
         self.firstViewController = firstViewController
         self.secondViewController = secondViewController
+        self.cellImageBackupCopy = selectedCellImageViewSnapshot
     }
 
     func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
@@ -41,25 +40,6 @@ final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
     }
 
     func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
-//        let type: PresentationType
-//        let firstViewController: FirstViewController
-//        let secondViewController: SecondViewController
-//
-//        if let fromViewController = transitionContext.viewController(forKey: .from) as? FirstViewController,
-//            let toViewController = transitionContext.viewController(forKey: .to) as? SecondViewController {
-//            firstViewController = fromViewController
-//            secondViewController = toViewController
-//            type = .present
-//        } else if let fromViewController = transitionContext.viewController(forKey: .from) as? SecondViewController,
-//            let toViewController = transitionContext.viewController(forKey: .to) as? FirstViewController {
-//            firstViewController = toViewController
-//            secondViewController = fromViewController
-//            type = .dismiss
-//        } else {
-//            transitionContext.completeTransition(true)
-//            return
-//        }
-
         let containerView = transitionContext.containerView
 
         guard let toView = secondViewController.view
@@ -71,10 +51,18 @@ final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
         containerView.addSubview(toView)
         toView.alpha = 0
 
+        guard let selectedCell = firstViewController.selectedCell else { return }
+
+        guard let window = firstViewController.view.window ?? secondViewController.view.window else { assertionFailure(); return }
+
+        // Imporatant to take rects before snapshoting to avoid issues that frames got changed
+        let cellImageViewRect = selectedCell.locationImageView.convert(selectedCell.locationImageView.bounds, to: window)
+
+        let cellLabelRect = selectedCell.locationLabel.convert(selectedCell.locationLabel.bounds, to: window)
+
         #warning("seems transitionContext.completeTransition(true) is not working just to fall through if something is nil")
 
-        guard let selectedCell = firstViewController.selectedCell,
-            let cellImageViewSnapshot = selectedCell.locationImageView.snapshotView(afterScreenUpdates: true),
+        guard let cellImageViewSnapshot = selectedCell.locationImageView.snapshotView(afterScreenUpdates: true),
             let cellLabelSnapshot = selectedCell.locationLabel.snapshotView(afterScreenUpdates: true),
             let controllerImageViewSnapshot = secondViewController.locationImageView.snapshotView(afterScreenUpdates: true),
             let closeButtonSnapshot = secondViewController.closeButton.snapshotView(afterScreenUpdates: true)
@@ -83,22 +71,11 @@ final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
                 return
         }
 
-        if type.isPresenting {
-            cellImageBackupCopy = cellImageViewSnapshot
-        }
+//        if type.isPresenting {
+//            cellImageBackupCopy = cellImageViewSnapshot
+//        }
 
-        let finalCellImageViewSnapshot = type.isPresenting ? cellImageViewSnapshot : cellImageBackupCopy!
-
-        guard let window = firstViewController.view.window ?? secondViewController.view.window else { assertionFailure(); return }
-
-        let cellImageViewRect = selectedCell.locationImageView.convert(selectedCell.locationImageView.bounds, to: window)
-        if type.isPresenting {
-            cellImageLocation = cellImageViewRect
-        }
-        let cellLabelRect = selectedCell.locationLabel.convert(selectedCell.locationLabel.bounds, to: window)
-        if type.isPresenting {
-            cellLabelLocation = cellLabelRect
-        }
+        let finalCellImageViewSnapshot = cellImageBackupCopy
 
         let controllerImageViewRect = secondViewController.locationImageView.convert(secondViewController.locationImageView.bounds, to: window)
         let controllerLabelRect = secondViewController.locationLabel.convert(secondViewController.locationLabel.bounds, to: window)
@@ -106,7 +83,7 @@ final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
 
         finalCellImageViewSnapshot.frame = type.isPresenting ? cellImageViewRect : controllerImageViewRect
 
-        cellLabelSnapshot.frame = type.isPresenting ? cellLabelLocation! : controllerLabelRect
+        cellLabelSnapshot.frame = type.isPresenting ? cellLabelRect : controllerLabelRect
 
         let backgroundView: UIView
         let whiteView: UIView
@@ -157,9 +134,9 @@ final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
             }
 
             UIView.addKeyframe(withRelativeStartTime: 0, relativeDuration: 1) {
-                finalCellImageViewSnapshot.frame = self.type.isPresenting ? controllerImageViewRect : self.cellImageLocation!
-                controllerImageViewSnapshot.frame = self.type.isPresenting ? controllerImageViewRect : self.cellImageLocation!
-                cellLabelSnapshot.frame = self.type.isPresenting ? controllerLabelRect : self.cellLabelLocation!
+                finalCellImageViewSnapshot.frame = self.type.isPresenting ? controllerImageViewRect : cellImageViewRect
+                controllerImageViewSnapshot.frame = self.type.isPresenting ? controllerImageViewRect : cellImageViewRect
+                cellLabelSnapshot.frame = self.type.isPresenting ? controllerLabelRect : cellLabelRect
                 whiteView.alpha = self.type.isPresenting ? 1 : 0
             }
         }) { _ in

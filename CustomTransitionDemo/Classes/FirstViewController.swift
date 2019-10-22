@@ -11,6 +11,7 @@ import UIKit
 class FirstViewController: UIViewController {
 
     private(set) var selectedCell: CollectionViewCell?
+    private(set) var selectedCellImageViewSnapshot: UIView?
 
     @IBOutlet private var collectionView: UICollectionView!
 
@@ -44,7 +45,7 @@ extension FirstViewController: UIViewControllerTransitioningDelegate {
             let secondViewController = presented as? SecondViewController
             else { return nil }
         
-        animator = Animator(type: .present, firstViewController: firstViewController, secondViewController: secondViewController)
+        animator = Animator(type: .present, firstViewController: firstViewController, secondViewController: secondViewController, selectedCellImageViewSnapshot: selectedCellImageViewSnapshot!)
         return animator
     }
 
@@ -54,7 +55,7 @@ extension FirstViewController: UIViewControllerTransitioningDelegate {
         guard let secondViewController = dismissed as? SecondViewController
             else { return nil }
 
-        animator = Animator(type: .dismiss, firstViewController: self, secondViewController: secondViewController)
+        animator = Animator(type: .dismiss, firstViewController: self, secondViewController: secondViewController, selectedCellImageViewSnapshot: selectedCellImageViewSnapshot!)
         return animator
     }
 }
@@ -73,6 +74,7 @@ extension FirstViewController: UICollectionViewDelegate, UICollectionViewDataSou
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         selectedCell = collectionView.cellForItem(at: indexPath) as? CollectionViewCell
+        selectedCellImageViewSnapshot = selectedCell?.locationImageView.snapshotView(afterScreenUpdates: false)
         presentSecondViewController()
     }
 
