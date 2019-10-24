@@ -24,8 +24,8 @@ class FirstViewController: UIViewController {
         collectionView.dataSource = self
 
         let layout = UICollectionViewFlowLayout()
-        layout.minimumLineSpacing = 8
-        layout.minimumInteritemSpacing = 8
+        layout.minimumLineSpacing = Constants.cellSpacing
+        layout.minimumInteritemSpacing = Constants.cellSpacing
 
         collectionView.setCollectionViewLayout(layout, animated: false)
     }
@@ -50,8 +50,6 @@ extension FirstViewController: UIViewControllerTransitioningDelegate {
     }
 
     func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-//        return animator
-
         guard let secondViewController = dismissed as? SecondViewController
             else { return nil }
 
@@ -79,7 +77,12 @@ extension FirstViewController: UICollectionViewDelegate, UICollectionViewDataSou
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = (collectionView.bounds.width - 8) / 2
+        let width = (collectionView.bounds.width - Constants.cellSpacing) / 2
         return .init(width: width, height: width)
+    }
+
+    private enum Constants {
+
+        static let cellSpacing: CGFloat = 8
     }
 }
