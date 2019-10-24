@@ -40,28 +40,42 @@ final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
     func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
         let containerView = transitionContext.containerView
 
-        guard let toView = secondViewController.view,
-            let selectedCell = firstViewController.selectedCell
-        else {
-            transitionContext.completeTransition(true)
-            return
+        guard let toView = secondViewController.view
+            else {
+                transitionContext.completeTransition(false)
+                return
         }
 
         containerView.addSubview(toView)
-        toView.alpha = 0
 
-        #warning("seems transitionContext.completeTransition(true) is not working just to fall through if something is nil")
-
-        guard let cellLabelSnapshot = selectedCell.locationLabel.snapshotView(afterScreenUpdates: true),
+        guard let selectedCell = firstViewController.selectedCell,
+            let cellLabelSnapshot = selectedCell.locationLabel.snapshotView(afterScreenUpdates: true),
             let controllerImageViewSnapshot = secondViewController.locationImageView.snapshotView(afterScreenUpdates: true),
             let closeButtonSnapshot = secondViewController.closeButton.snapshotView(afterScreenUpdates: true),
             let window = firstViewController.view.window ?? secondViewController.view.window
-        else {
+            else {
                 transitionContext.completeTransition(true)
                 return
         }
 
+        toView.alpha = 0
+
         let isPresenting = type.isPresenting
+
+        let backgroundView: UIView
+        let whiteView = UIView(frame: containerView.bounds)
+        whiteView.backgroundColor = .white
+
+        if isPresenting {
+            backgroundView = UIView(frame: containerView.bounds)
+            backgroundView.addSubview(whiteView)
+            whiteView.alpha = 0
+        } else {
+            backgroundView = firstViewController.view.snapshotView(afterScreenUpdates: true) ?? whiteView
+            backgroundView.addSubview(whiteView)
+        }
+
+        [backgroundView, selectedCellImageViewSnapshot, controllerImageViewSnapshot, cellLabelSnapshot, closeButtonSnapshot].forEach { containerView.addSubview($0) }
 
         let controllerImageViewRect = secondViewController.locationImageView.convert(secondViewController.locationImageView.bounds, to: window)
         let controllerLabelRect = secondViewController.locationLabel.convert(secondViewController.locationLabel.bounds, to: window)
@@ -73,32 +87,13 @@ final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
             $0.layer.masksToBounds = true
         }
 
+        controllerImageViewSnapshot.alpha = isPresenting ? 0 : 1
+        selectedCellImageViewSnapshot.alpha = isPresenting ? 1 : 0
+
         cellLabelSnapshot.frame = isPresenting ? cellLabelRect : controllerLabelRect
-
-        let backgroundView: UIView
-        let whiteView: UIView
-
-        if isPresenting {
-            whiteView = UIView(frame: containerView.bounds)
-            whiteView.backgroundColor = .white
-            backgroundView = UIView(frame: containerView.bounds)
-            backgroundView.addSubview(whiteView)
-            whiteView.alpha = 0
-        } else {
-            whiteView = UIView(frame: containerView.bounds)
-            whiteView.backgroundColor = .white
-            backgroundView = firstViewController.view.snapshotView(afterScreenUpdates: true) ?? whiteView
-            backgroundView.addSubview(whiteView)
-        }
 
         closeButtonSnapshot.frame = closeButtonRect
         closeButtonSnapshot.alpha = isPresenting ? 0 : 1
-
-        [backgroundView, selectedCellImageViewSnapshot, controllerImageViewSnapshot, cellLabelSnapshot, closeButtonSnapshot].forEach { containerView.addSubview($0) }
-
-        controllerImageViewSnapshot.alpha = isPresenting ? 0 : 1
-        controllerImageViewSnapshot.alpha = isPresenting ? 0 : 1
-        selectedCellImageViewSnapshot.alpha = isPresenting ? 1 : 0
 
         UIView.animateKeyframes(withDuration: Self.duration, delay: 0, options: .calculationModeCubic, animations: {
             UIView.addKeyframe(withRelativeStartTime: 0, relativeDuration: 0.6) {
