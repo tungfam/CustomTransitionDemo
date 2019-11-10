@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A64F532B2378641C0072A05D /* DataManger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64F532A2378641C0072A05D /* DataManger.swift */; };
 		A653DC3323521E3C00FB6E8A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A653DC3223521E3C00FB6E8A /* AppDelegate.swift */; };
 		A653DC3723521E3C00FB6E8A /* FirstViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A653DC3623521E3C00FB6E8A /* FirstViewController.swift */; };
 		A653DC3A23521E3C00FB6E8A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A653DC3823521E3C00FB6E8A /* Main.storyboard */; };
@@ -18,6 +19,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A64F532A2378641C0072A05D /* DataManger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManger.swift; sourceTree = "<group>"; };
 		A653DC2F23521E3C00FB6E8A /* CustomTransitionDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CustomTransitionDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A653DC3223521E3C00FB6E8A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A653DC3623521E3C00FB6E8A /* FirstViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstViewController.swift; sourceTree = "<group>"; };
@@ -93,6 +95,7 @@
 				A653DC3B23521E3E00FB6E8A /* Assets.xcassets */,
 				A653DC3D23521E3E00FB6E8A /* LaunchScreen.storyboard */,
 				A653DC4023521E3E00FB6E8A /* Info.plist */,
+				A64F532A2378641C0072A05D /* DataManger.swift */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -173,6 +176,7 @@
 				A653DC532353886F00FB6E8A /* CollectionViewCell.swift in Sources */,
 				A653DC3723521E3C00FB6E8A /* FirstViewController.swift in Sources */,
 				A653DC3323521E3C00FB6E8A /* AppDelegate.swift in Sources */,
+				A64F532B2378641C0072A05D /* DataManger.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

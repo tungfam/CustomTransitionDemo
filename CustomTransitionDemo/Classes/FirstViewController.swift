@@ -17,6 +17,10 @@ class FirstViewController: UIViewController {
 
     private var animator: Animator?
 
+    override var prefersStatusBarHidden: Bool {
+        return true
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -30,10 +34,11 @@ class FirstViewController: UIViewController {
         collectionView.setCollectionViewLayout(layout, animated: false)
     }
 
-    private func presentSecondViewController() {
-        let secondViewController = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "SecondViewController")
+    private func presentSecondViewController(with data: CellData) {
+        let secondViewController = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "SecondViewController") as! SecondViewController
         secondViewController.transitioningDelegate = self
         secondViewController.modalPresentationStyle = .fullScreen
+        secondViewController.data = data
         present(secondViewController, animated: true)
     }
 }
@@ -61,11 +66,12 @@ extension FirstViewController: UIViewControllerTransitioningDelegate {
 extension FirstViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 20
+        return DataManger.data.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewCellIdentifier", for: indexPath)
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewCellIdentifier", for: indexPath) as! CollectionViewCell
+        cell.configure(with: DataManger.data[indexPath.row])
         return cell
     }
 
@@ -73,7 +79,7 @@ extension FirstViewController: UICollectionViewDelegate, UICollectionViewDataSou
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         selectedCell = collectionView.cellForItem(at: indexPath) as? CollectionViewCell
         selectedCellImageViewSnapshot = selectedCell?.locationImageView.snapshotView(afterScreenUpdates: false)
-        presentSecondViewController()
+        presentSecondViewController(with: DataManger.data[indexPath.row])
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
