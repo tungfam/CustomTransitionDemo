@@ -17,10 +17,6 @@ class FirstViewController: UIViewController {
 
     private var animator: Animator?
 
-    override var prefersStatusBarHidden: Bool {
-        return true
-    }
-
     override func viewDidLoad() {
         super.viewDidLoad()
 

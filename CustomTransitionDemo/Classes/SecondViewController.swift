@@ -16,10 +16,6 @@ class SecondViewController: UIViewController {
     @IBOutlet private(set) var locationLabel: UILabel!
     @IBOutlet private(set) var closeButton: UIButton!
 
-    override var prefersStatusBarHidden: Bool {
-        return true
-    }
-
     override func viewDidLoad() {
         super.viewDidLoad()
 

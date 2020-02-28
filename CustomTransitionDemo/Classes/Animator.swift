@@ -10,12 +10,12 @@ import UIKit
 
 final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
 
-    static let duration: TimeInterval = 1.2
+    static let duration: TimeInterval = 1.25
 
     private let type: PresentationType
     private let firstViewController: FirstViewController
     private let secondViewController: SecondViewController
-    private let selectedCellImageViewSnapshot: UIView
+    private var selectedCellImageViewSnapshot: UIView
     private let cellImageViewRect: CGRect
     private let cellLabelRect: CGRect
 
@@ -50,6 +50,7 @@ final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
 
         guard let selectedCell = firstViewController.selectedCell,
             let cellLabelSnapshot = selectedCell.locationLabel.snapshotView(afterScreenUpdates: true),
+            let test = selectedCell.locationImageView.snapshotView(afterScreenUpdates: true),
             let controllerImageViewSnapshot = secondViewController.locationImageView.snapshotView(afterScreenUpdates: true),
             let closeButtonSnapshot = secondViewController.closeButton.snapshotView(afterScreenUpdates: true),
             let window = firstViewController.view.window ?? secondViewController.view.window
@@ -73,6 +74,10 @@ final class Animator: NSObject, UIViewControllerAnimatedTransitioning {
         } else {
             backgroundView = firstViewController.view.snapshotView(afterScreenUpdates: true) ?? whiteView
             backgroundView.addSubview(whiteView)
+        }
+
+        if isPresenting {
+            selectedCellImageViewSnapshot = test
         }
 
         [backgroundView, selectedCellImageViewSnapshot, controllerImageViewSnapshot, cellLabelSnapshot, closeButtonSnapshot].forEach { containerView.addSubview($0) }
